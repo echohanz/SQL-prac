@@ -1,0 +1,66 @@
+SELECT topic.id, topic.description, COUNT(blurt_analysis.blurtid)
+FROM blurts.blurt_analysis right outer join blurts.topic on topic.id = blurt_analysis.topicid 
+GROUP BY topic.id
+ORDER BY topic.id;
+
+SELECT user.name, count(follow.follower)
+FROM blurts.user, blurts.celebrity, blurts.follow
+WHERE user.email = celebrity.email
+AND follow.followee = celebrity.email
+GROUP BY user.name;
+
+SELECT user.name, count(blurt.blurtid)
+FROM blurts.user, blurts.celebrity, blurts.blurt
+WHERE user.email = celebrity.email
+AND celebrity.email = blurt.email
+GROUP BY celebrity.email
+ORDER BY count(blurt.blurtid) DESC;
+
+SELECT DISTINCT user.name
+FROM blurts.user, blurts.celebrity, blurts.follow
+WHERE user.email = celebrity.email
+AND celebrity.email NOT IN (SELECT follower FROM blurts.follow);
+
+SELECT user.name, user.email, count(follow.follower)
+FROM blurts.user, blurts.vendor_ambassador, blurts.follow
+WHERE vendor_ambassador.email = user.email
+AND vendor_ambassador.email = follow.followee
+GROUP BY user.name;
+
+SELECT vendor.name, count(DISTINCT blurt_analysis.email)
+FROM blurts.vendor, blurts.blurt_analysis, blurts.vendor_topics
+WHERE vendor.id = vendor_topics.vendorid 
+AND vendor_topics.topicid = blurt_analysis.topicid
+AND blurt_analysis.email NOT IN  
+ (SELECT user_ad.email FROM blurts.user_ad, blurts.advertisement WHERE advertisement.vendorid = vendor.id  AND advertisement.id = user_ad.adid) 
+GROUP BY vendor.id
+ORDER BY count(blurt_analysis.email) DESC
+
+SELECT DISTINCT user1.name, user2.name  
+FROM blurts.user AS user1, blurts.user AS user2, blurts.blurt_analysis AS user1_ba, blurts.blurt_analysis AS user2_ba  
+WHERE user1_ba.topicid = user2_ba.topicid 
+AND user1_ba.email != user2_ba.email 
+AND user1.email = user1_ba.email 
+AND user2.email=user2_ba.email
+AND user1_ba.email NOT IN (SELECT follower FROM blurts.follow WHERE followee=user2_ba.email);
+
+SELECT DISTINCT a.email, b.email, c.email
+FROM blurts.user as a, blurts.user as b, blurts.user as c, blurts.follow as follow1, blurts.follow as follow2
+WHERE a.email != b.email
+AND c.email != a.email
+AND a.email = follow1.follower
+AND b.email = follow1.followee
+AND b.email = follow2.follower
+AND c.email = follow2.followee
+AND a.email NOT IN (SELECT follow3.follower FROM blurts.follow as follow3 WHERE follow3.followee = c.email)
+
+SELECT topic.id, topic.description, blurt.location, COUNT(*) as numbers, AVG(blurt_analysis.sentiment)
+FROM blurts.topic, blurts.blurt_analysis, blurts.blurt
+WHERE topic.id = blurt_analysis.topicid
+AND blurt_analysis.blurtid = blurt.blurtid
+AND blurt.email = blurt_analysis.email
+GROUP BY topic.id, topic.description, blurt.location
+HAVING AVG(blurt_analysis.sentiment)< 0;
+
+
+
